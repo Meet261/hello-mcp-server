@@ -1,13 +1,7 @@
-from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI
 
 app = FastAPI()
 
 @app.get("/mcp")
-async def handle_mcp(request: Request):
-    params = dict(request.query_params)
-    api_key = params.get("apiKey", "not provided")
-    return JSONResponse(content={
-        "message": "Hello, MCP World!",
-        "receivedApiKey": api_key
-    })
+async def handle_mcp():
+    return {"message": "Hello, MCP World!"}
