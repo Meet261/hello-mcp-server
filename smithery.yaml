@@ -1,5 +1,16 @@
-name: hello-mcp-server
-description: A simple FastAPI-based MCP server
-image: python:3.11-slim
-port: 8080
-start: uvicorn app.main:app --host 0.0.0.0 --port 8080
+runtime: "container"
+
+startCommand:
+  type: "http"
+  configSchema:
+    type: "object"
+    required: ["apiKey"]
+    properties:
+      apiKey:
+        type: "string"
+        title: "API Key"
+        description: "Your API key"
+
+build:
+  dockerfile: "Dockerfile"
+  dockerBuildPath: "."
