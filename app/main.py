@@ -38,14 +38,12 @@ async def summarize(request: Request, pdf: UploadFile = None, url: str = Form(""
 
     return templates.TemplateResponse("index.html", {"request": request, "summary": summary})
 
-
 @app.post("/rpc")
 async def handle_rpc(request: Request):
     body = await request.json()
     method = body.get("method")
     params = body.get("params", {})
 
-    # 🔒 Lazy-loaded tool list: always respond quickly
     if method == "toolList":
         return JSONResponse({
             "result": [
@@ -55,7 +53,10 @@ async def handle_rpc(request: Request):
                     "parameters": {
                         "type": "object",
                         "properties": {
-                            "url": {"type": "string", "description": "A direct link to a PDF file"}
+                            "url": {
+                                "type": "string",
+                                "description": "Direct link to a PDF file"
+                            }
                         },
                         "required": ["url"]
                     }
@@ -63,23 +64,23 @@ async def handle_rpc(request: Request):
             ]
         })
 
-    # Only initialize heavy dependencies when method is actually called
+    # Delay heavy logic until actual use
     if method == "summarize_pdf":
+        from app.utils import download_pdf_from_url
+        from app.summarizer import summarize_pdf_file
+        import os
+
         url = params.get("url")
         if not url:
             return JSONResponse({"error": "Missing 'url'"}, status_code=400)
 
-        # Download and summarize
-        path = download_pdf_from_url(url)
-        if not path:
+        file_path = download_pdf_from_url(url)
+        if not file_path:
             return JSONResponse({"error": "Failed to download PDF"}, status_code=400)
 
-        summary = summarize_pdf_file(path)
-        try:
-            os.remove(path)
-        except Exception:
-            pass
-
+        summary = summarize_pdf_file(file_path)
+        os.remove(file_path)
         return JSONResponse({"result": summary})
 
-    return JSONResponse({"error": f"Unknown method '{method}'"}, status_code=404)
+    return JSONResponse({"error": f\"Unknown method '{method}'\"}, status_code=404)
+
