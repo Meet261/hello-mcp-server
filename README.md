@@ -1,93 +1,71 @@
-# 🚀 Hello MCP Server
+## Project: MCP Paper Summarizer
 
-A simple FastAPI-based web service that returns a greeting message.  
-Built for deployment on [Smithery](https://smithery.ai) using containerization.
+### Folder Structure
+# mcp-paper-summarizer/
+# ├── app/
+# │   ├── main.py
+# │   ├── summarizer.py
+# │   └── utils.py
+# ├── templates/
+# │   └── index.html
+# ├── static/
+# │   └── style.css
+# ├── requirements.txt
+# ├── Dockerfile
+# ├── smithery.yaml
+# └── README.md
 
-## 🌐 Live Demo
+# ... [All previous code remains unchanged above] ...
 
-> Once deployed, your service will be available at:  
-> `https://your-smithery-project.smithery.run/`
+# README.md
 
-## 🧩 Features
+# MCP Paper Summarizer
 
-- Lightweight FastAPI web server
-- Dockerized for easy deployment
-- Compatible with MCP environments (e.g., Smithery)
-- Returns: `{"message": "Hello, MCP World!"}` at `/`
+This is an MCP-compatible server that allows users to upload a research paper (in PDF format) or provide a URL to one, and receive a natural language summary powered by OpenAI.
 
----
+## 🚀 Features
+- Upload or link to an academic paper (PDF)
+- Automatically extracts and summarizes the content using GPT
+- Simple, clean web interface built with FastAPI and Jinja2
+- Ready to deploy via [Smithery](https://smithery.ai)
 
-## 📁 Project Structure
+## 🛠 Technologies Used
+- FastAPI (web framework)
+- OpenAI (for text summarization)
+- PyPDF2 (PDF parsing)
+- Docker (containerization)
 
-```
-hello-mcp-server/
-├── app/
-│   └── main.py          # FastAPI application
-├── Dockerfile           # Docker build instructions
-├── requirements.txt     # Python dependencies
-└── smithery.yaml        # Smithery deployment configuration
-```
-
----
-
-## 🛠️ Local Development
-
-### 1. Install requirements (optional)
+## 📦 Installation (Locally)
 ```bash
+git clone https://github.com/your-username/mcp-paper-summarizer
+cd mcp-paper-summarizer
 pip install -r requirements.txt
+uvicorn app.main:app --reload
 ```
 
-### 2. Run the server locally
+Visit: `http://localhost:8000`
+
+## 🐳 Deployment via Smithery
+1. Push this repo to GitHub
+2. Go to [smithery.ai](https://smithery.ai)
+3. Click "New Project" → Paste your repo URL
+4. Smithery auto-deploys the app (exposes a URL)
+
+## 🔐 Environment Variables
+Make sure to set your OpenAI API key:
 ```bash
-uvicorn app.main:app --reload --port 8080
+export OPENAI_API_KEY=your-key-here
 ```
+In Smithery, you can set this in the project’s environment settings.
 
-Open browser: [http://localhost:8080](http://localhost:8080)
+## 📁 Folder Overview
+- `app/` – Core FastAPI app logic
+- `templates/` – Jinja2 HTML templates
+- `static/` – CSS styling
+- `requirements.txt` – Python dependencies
+- `Dockerfile` – Container build instructions
+- `smithery.yaml` – Smithery config
 
 ---
 
-## 🐳 Docker Usage
-
-### Build the Docker image
-
-```bash
-docker build -t hello-mcp-server .
-```
-
-### Run the container
-
-```bash
-docker run -p 8080:8080 hello-mcp-server
-```
-
----
-
-## 🚀 Deploy to Smithery
-
-1. Push this project to a GitHub repository.
-2. Go to [smithery.ai](https://smithery.ai) → **New Project**
-3. Paste your repo URL.
-4. Smithery will auto-deploy using `smithery.yaml`.
-
----
-
-## 📄 Endpoint
-
-| Method | Path | Description                 |
-|--------|------|-----------------------------|
-| GET    | `/`  | Returns Hello MCP message   |
-
-Response:
-
-```json
-{
-  "message": "Hello, MCP World!"
-}
-```
-
----
-
-## 📦 Dependencies
-
-- [FastAPI](https://fastapi.tiangolo.com/)
-- [Uvicorn](https://www.uvicorn.org/)
+Built for interactive, AI-enhanced summarization of academic research ✨

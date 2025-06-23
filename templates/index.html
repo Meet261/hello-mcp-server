@@ -1,0 +1,31 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MCP Paper Summarizer</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="container">
+    <h1>MCP Paper Summarizer</h1>
+    <form method="POST" action="/summarize" enctype="multipart/form-data">
+        <label>Upload PDF:</label>
+        <input type="file" name="pdf">
+
+        <p style="text-align:center;">or</p>
+
+        <label>Enter PDF URL:</label>
+        <input type="text" name="url" placeholder="https://example.com/paper.pdf">
+
+        <button type="submit">Summarize</button>
+    </form>
+
+    {% if summary %}
+    <div class="summary-box">
+        <h2>Summary:</h2>
+        <p>{{ summary }}</p>
+    </div>
+    {% endif %}
+</div>
+</body>
+</html>
