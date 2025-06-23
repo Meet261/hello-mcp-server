@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request, UploadFile, Form
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.responses import JSONResponse
 from app.summarizer import summarize_pdf_file, summarize_pdf_url
 from app.utils import download_pdf_from_url
 import shutil
@@ -36,3 +37,25 @@ async def summarize(request: Request, pdf: UploadFile = None, url: str = Form(""
         summary = "Please upload a file or provide a URL."
 
     return templates.TemplateResponse("index.html", {"request": request, "summary": summary})
+
+
+@app.post("/rpc")
+async def handle_rpc(request: Request):
+    body = await request.json()
+    method = body.get("method")
+    params = body.get("params", {})
+
+    if method == "summarize_pdf":
+        url = params.get("url")
+        if not url:
+            return JSONResponse({"error": "Missing 'url'"}, status_code=400)
+
+        file_path = download_pdf_from_url(url)
+        if file_path:
+            summary = summarize_pdf_file(file_path)
+            os.remove(file_path)
+            return JSONResponse({"result": summary})
+        else:
+            return JSONResponse({"error": "Failed to download PDF"}, status_code=400)
+
+    return JSONResponse({"error": f"Unknown method '{method}'"}, status_code=404)
