@@ -45,7 +45,27 @@ async def handle_rpc(request: Request):
     method = body.get("method")
     params = body.get("params", {})
 
-    if method == "summarize_pdf":
+    if method == "toolList":
+        return JSONResponse({
+            "result": [
+                {
+                    "name": "summarize_pdf",
+                    "description": "Summarize a PDF from a given URL using OpenAI.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "url": {
+                                "type": "string",
+                                "description": "A direct link to a PDF file"
+                            }
+                        },
+                        "required": ["url"]
+                    }
+                }
+            ]
+        })
+
+    elif method == "summarize_pdf":
         url = params.get("url")
         if not url:
             return JSONResponse({"error": "Missing 'url'"}, status_code=400)
