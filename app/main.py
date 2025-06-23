@@ -45,6 +45,7 @@ async def handle_rpc(request: Request):
     method = body.get("method")
     params = body.get("params", {})
 
+    # 🔒 Lazy-loaded tool list: always respond quickly
     if method == "toolList":
         return JSONResponse({
             "result": [
@@ -54,10 +55,7 @@ async def handle_rpc(request: Request):
                     "parameters": {
                         "type": "object",
                         "properties": {
-                            "url": {
-                                "type": "string",
-                                "description": "A direct link to a PDF file"
-                            }
+                            "url": {"type": "string", "description": "A direct link to a PDF file"}
                         },
                         "required": ["url"]
                     }
@@ -65,17 +63,23 @@ async def handle_rpc(request: Request):
             ]
         })
 
-    elif method == "summarize_pdf":
+    # Only initialize heavy dependencies when method is actually called
+    if method == "summarize_pdf":
         url = params.get("url")
         if not url:
             return JSONResponse({"error": "Missing 'url'"}, status_code=400)
 
-        file_path = download_pdf_from_url(url)
-        if file_path:
-            summary = summarize_pdf_file(file_path)
-            os.remove(file_path)
-            return JSONResponse({"result": summary})
-        else:
+        # Download and summarize
+        path = download_pdf_from_url(url)
+        if not path:
             return JSONResponse({"error": "Failed to download PDF"}, status_code=400)
+
+        summary = summarize_pdf_file(path)
+        try:
+            os.remove(path)
+        except Exception:
+            pass
+
+        return JSONResponse({"result": summary})
 
     return JSONResponse({"error": f"Unknown method '{method}'"}, status_code=404)
