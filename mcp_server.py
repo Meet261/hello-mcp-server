@@ -15,6 +15,7 @@ from pydantic import AnyUrl
 import mcp.server.stdio
 import mcp.types as types
 
+# Import functions but don't initialize anything yet
 from app.summarizer import get_summary
 from app.utils import extract_text_from_pdf, download_pdf_content
 
@@ -27,7 +28,7 @@ server = Server("pdf-summarizer-mcp")
 
 @server.list_tools()
 async def handle_list_tools() -> list[types.Tool]:
-    """List available tools."""
+    """List available tools - this should be fast and not do any heavy initialization."""
     return [
         types.Tool(
             name="summarize_pdf_from_url",
@@ -61,7 +62,7 @@ async def handle_list_tools() -> list[types.Tool]:
 
 @server.call_tool()
 async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[types.TextContent]:
-    """Handle tool calls."""
+    """Handle tool calls - heavy initialization happens here, not during startup."""
     try:
         if name == "summarize_pdf_from_url":
             url = arguments.get("url")
@@ -82,7 +83,7 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[types.T
                     text="Error: Could not extract any text from the PDF. It might be an image-only PDF or corrupted."
                 )]
             
-            # Generate summary
+            # Generate summary (Gemini API initialization happens inside get_summary)
             summary = get_summary(pdf_text)
             
             return [types.TextContent(
@@ -97,7 +98,7 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[types.T
             
             logger.info("Summarizing provided PDF text")
             
-            # Generate summary
+            # Generate summary (Gemini API initialization happens inside get_summary)
             summary = get_summary(text)
             
             return [types.TextContent(

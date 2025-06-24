@@ -4,27 +4,38 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+# Don't initialize anything globally - do it lazily
+_model = None
+_initialized = False
 
-model = None
-if GEMINI_API_KEY:
+def _ensure_initialized():
+    """Initialize Gemini API only when needed."""
+    global _model, _initialized
+    
+    if _initialized:
+        return _model
+    
+    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+    
+    if not GEMINI_API_KEY:
+        raise ValueError("GEMINI_API_KEY environment variable is not set")
+    
     try:
         genai.configure(api_key=GEMINI_API_KEY)
-        model = genai.GenerativeModel('gemini-2.0-flash')
+        _model = genai.GenerativeModel('gemini-2.0-flash')
+        _initialized = True
         logger.info("Gemini model configured successfully.")
+        return _model
     except Exception as e:
         logger.error(f"Failed to configure Gemini API: {e}", exc_info=True)
-else:
-    logger.warning("GEMINI_API_KEY is not set. Gemini model will not be configured.")
+        raise ValueError(f"Failed to initialize Gemini API: {e}")
 
 def get_summary(paper_text: str) -> str:
     """
     Summarizes the provided paper text using the Google Gemini API.
     """
-    global model
-
-    if not GEMINI_API_KEY or model is None:
-        raise ValueError("Gemini API key is not configured or model failed to initialize.")
+    # Initialize only when actually called
+    model = _ensure_initialized()
 
     max_model_input_length = 800000 
     if len(paper_text) > max_model_input_length:
