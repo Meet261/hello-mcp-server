@@ -1,26 +1,14 @@
 import asyncio
 import logging
-from typing import Any, Sequence
+import os
+from typing import Any
 from mcp.server import Server
 from mcp.server.models import InitializationOptions
-from mcp.server.stdio import stdio_server
-from mcp.types import (
-    Resource,
-    Tool,
-    TextContent,
-    ImageContent,
-    EmbeddedResource,
-)
-from pydantic import AnyUrl
 import mcp.server.stdio
 import mcp.types as types
 
-# Import functions but don't initialize anything yet
-from app.summarizer import get_summary
-from app.utils import extract_text_from_pdf, download_pdf_content
-
-# Configure logging
-logging.basicConfig(level=logging.INFO)
+# Configure minimal logging
+logging.basicConfig(level=logging.WARNING)  # Reduced logging level
 logger = logging.getLogger("pdf-summarizer-mcp")
 
 # Create server instance
@@ -28,7 +16,8 @@ server = Server("pdf-summarizer-mcp")
 
 @server.list_tools()
 async def handle_list_tools() -> list[types.Tool]:
-    """List available tools - this should be fast and not do any heavy initialization."""
+    """List available tools - must be ultra-fast."""
+    # Return tools immediately without any imports or initialization
     return [
         types.Tool(
             name="summarize_pdf_from_url",
@@ -62,28 +51,28 @@ async def handle_list_tools() -> list[types.Tool]:
 
 @server.call_tool()
 async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[types.TextContent]:
-    """Handle tool calls - heavy initialization happens here, not during startup."""
+    """Handle tool calls - all heavy imports happen here."""
     try:
+        # Import heavy modules only when tool is actually called
+        from app.summarizer import get_summary
+        from app.utils import extract_text_from_pdf, download_pdf_content
+        
         if name == "summarize_pdf_from_url":
             url = arguments.get("url")
             if not url:
                 return [types.TextContent(type="text", text="Error: URL is required")]
             
-            logger.info(f"Downloading PDF from URL: {url}")
-            
-            # Download PDF content
+            # Download and process PDF
             pdf_content_bytes = download_pdf_content(url)
-            
-            # Extract text from PDF
             pdf_text = extract_text_from_pdf(pdf_content_bytes)
             
             if not pdf_text.strip():
                 return [types.TextContent(
                     type="text", 
-                    text="Error: Could not extract any text from the PDF. It might be an image-only PDF or corrupted."
+                    text="Error: Could not extract text from PDF. It might be image-only or corrupted."
                 )]
             
-            # Generate summary (Gemini API initialization happens inside get_summary)
+            # Generate summary
             summary = get_summary(pdf_text)
             
             return [types.TextContent(
@@ -96,9 +85,7 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[types.T
             if not text:
                 return [types.TextContent(type="text", text="Error: Text is required")]
             
-            logger.info("Summarizing provided PDF text")
-            
-            # Generate summary (Gemini API initialization happens inside get_summary)
+            # Generate summary
             summary = get_summary(text)
             
             return [types.TextContent(
@@ -110,11 +97,15 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[types.T
             return [types.TextContent(type="text", text=f"Error: Unknown tool {name}")]
             
     except Exception as e:
-        logger.error(f"Error in tool {name}: {e}", exc_info=True)
+        logger.error(f"Error in tool {name}: {e}")
         return [types.TextContent(type="text", text=f"Error: {str(e)}")]
 
 async def main():
-    """Main entry point for the MCP server."""
+    """Main entry point - minimal initialization."""
+    # Check if API key exists but don't initialize anything
+    if not os.getenv("GEMINI_API_KEY"):
+        logger.warning("GEMINI_API_KEY not set - tools will fail when called")
+    
     async with mcp.server.stdio.stdio_server() as (read_stream, write_stream):
         await server.run(
             read_stream,
