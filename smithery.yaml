@@ -1,41 +1,19 @@
-# smithery.yaml
 apiVersion: v1
 kind: Deployment
 metadata:
-  name: paper-summarizer-mcp # Replace with your desired project name on Smithery
+  name: hello-mcp-server
 spec:
-  type: container # Indicates a Docker container deployment
+  type: container
   container:
     image:
-      build: . # Build the Docker image from the Dockerfile in the current directory
-    ports:
-      - containerPort: 8000 # The port your FastAPI app listens on inside the container
-        servicePort: 80 # The port Smithery.ai will expose to the internet (usually 80 or 443)
-    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"] # Command to run your app
+      build: .
+    command: ["python", "mcp_server.py"]
     
-    # NEW ADDITION: Define configuration schema for your server
     configSchema:
       type: object
-      # Ensure that the property name here matches the environment variable name
-      # that your Python code expects, typically in uppercase with underscores.
-      # Smithery.ai is expected to map this to an environment variable.
       required: ["GEMINI_API_KEY"]
       properties:
-        GEMINI_API_KEY: # This property name will be used in the Smithery.ai UI
+        GEMINI_API_KEY:
           type: string
           title: "Gemini API Key"
-          description: "Your Google Gemini API Key for summarization."
-          # Optionally, you can add format: "password" or "secret" if Smithery.ai supports it
-          # to hide the input in the UI for security.
-          # format: "password" # Check Smithery.ai docs if this is supported for UI masking
-        
-        # You can add other configurable parameters here if your server needs them,
-        # e.g., default summary length, model selection, etc.
-        # Example (if you wanted to allow configuring model temperature):
-        # temperature:
-        #   type: number
-        #   title: "Summary Temperature"
-        #   description: "Controls the randomness of the summary (0.0 - 1.0)."
-        #   default: 0.7
-        #   minimum: 0
-        #   maximum: 1
+          description: "Your Google Gemini API Key for PDF summarization"

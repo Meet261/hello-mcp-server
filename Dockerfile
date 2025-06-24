@@ -1,33 +1,17 @@
-# Use a slim Python image for smaller size
-FROM python:3.9-slim-buster
+FROM python:3.11-slim
 
-# Set the working directory in the container
 WORKDIR /app
 
-# Copy the requirements file and install dependencies
-# This is done first to leverage Docker's layer caching
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements first for better caching
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the application code
-# Ensure your app directory structure matches:
-# /app (WORKDIR)
-# ├── app/
-# │   ├── main.py
-# │   ├── summarizer.py
-# │   └── utils.py
-# ├── static/
-# │   └── style.css
-# └── templates/
-#     └── index.html
-COPY app/ ./app/
-COPY static/ ./static/
-COPY templates/ ./templates/
+# Copy application code
+COPY . .
 
-# Expose the port that Uvicorn will run on
-EXPOSE 8000
-
-# Command to run the application using Uvicorn
-# The --host 0.0.0.0 makes the server accessible from outside the container
-# The --port 8000 matches the EXPOSE instruction
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Expose the MCP server
+CMD ["python", "mcp_server.py"]
