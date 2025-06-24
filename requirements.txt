@@ -1,7 +1,8 @@
 fastapi
-uvicorn
-jinja2
-python-multipart
-PyPDF2
-openai
+uvicorn[standard]
+pypdf
 requests
+google-generativeai
+python-dotenv # For local testing with .env file
+python-multipart # Required for handling file uploads with FastAPI
+Jinja2 # Required for FastAPI templating

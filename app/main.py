@@ -1,113 +1,76 @@
-from fastapi import FastAPI, Request, UploadFile, Form, APIRouter
-from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.templating import Jinja2Templates
-from fastapi.staticfiles import StaticFiles
-import shutil
 import os
-from pathlib import Path
+from dotenv import load_dotenv # Keep this import here and load_dotenv() call
 
-# Initialize FastAPI
+# Load environment variables FIRST before importing other modules that might use os.getenv
+# This ensures GEMINI_API_KEY is available when summarizer.py is imported
+load_dotenv() 
+
+from fastapi import FastAPI, Request, File, UploadFile, Form, HTTPException
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from app.summarizer import get_summary # This import now happens AFTER load_dotenv()
+from app.utils import extract_text_from_pdf, download_pdf_content
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
 app = FastAPI()
 
-# Constants
-BASE_DIR = Path(__file__).resolve().parent.parent
-UPLOAD_DIR = "uploaded"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+# Mount static files (CSS, JS)
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Mount templates and static
-templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
-app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
+# Configure templates for HTML files
+templates = Jinja2Templates(directory="templates")
 
-# HTML Homepage
 @app.get("/", response_class=HTMLResponse)
-async def serve_home(request: Request):
+async def read_root(request: Request):
+    """Serves the main HTML page for the summarizer UI."""
     return templates.TemplateResponse("index.html", {"request": request})
 
-# HTML Summarize route
-@app.post("/summarize", response_class=HTMLResponse)
-async def summarize(request: Request, pdf: UploadFile = None, url: str = Form("")):
-    from app.summarizer import summarize_pdf_file
-    from app.utils import download_pdf_from_url
+@app.post("/summarize")
+async def summarize_paper_endpoint(
+    pdf_file: UploadFile = File(None),
+    pdf_url: str = Form(None)
+):
+    """
+    Handles PDF summarization requests.
+    Expects either a PDF file upload or a PDF URL.
+    """
+    pdf_text = ""
+    file_source = ""
 
-    summary = ""
-    if pdf:
-        file_path = f"{UPLOAD_DIR}/{pdf.filename}"
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(pdf.file, buffer)
-        summary = summarize_pdf_file(file_path)
-        os.remove(file_path)
-    elif url:
-        file_path = download_pdf_from_url(url)
-        if file_path:
-            summary = summarize_pdf_file(file_path)
-            os.remove(file_path)
-        else:
-            summary = "Failed to download the PDF from the given URL."
-    else:
-        summary = "Please upload a file or provide a URL."
-
-    return templates.TemplateResponse("index.html", {"request": request, "summary": summary})
-
-
-# ----------------------
-# ✅ RPC ROUTER SECTION
-# ----------------------
-router = APIRouter()
-
-@router.post("/rpc")
-async def handle_rpc(request: Request):
     try:
-        body = await request.json()
-        method = body.get("method")
-        params = body.get("params", {})
-
-        # 1. Tool Discovery
-        if method == "toolList":
-            return JSONResponse({
-                "result": [
-                    {
-                        "name": "summarize_pdf",
-                        "description": "Summarize a PDF document from a direct URL using OpenAI.",
-                        "parameters": {
-                            "type": "object",
-                            "properties": {
-                                "url": {
-                                    "type": "string",
-                                    "description": "A direct HTTPS URL to a PDF file"
-                                }
-                            },
-                            "required": ["url"]
-                        }
-                    }
-                ]
-            })
-
-        # 2. Tool Execution
-        elif method == "summarize_pdf":
-            from app.utils import download_pdf_from_url
-            from app.summarizer import summarize_pdf_file
-
-            url = params.get("url")
-            if not url:
-                return JSONResponse({"error": "Missing 'url' parameter"}, status_code=400)
-
-            file_path = download_pdf_from_url(url)
-            if not file_path:
-                return JSONResponse({"error": "Failed to download or access the provided PDF URL."}, status_code=400)
-
-            summary = summarize_pdf_file(file_path)
-            try:
-                os.remove(file_path)
-            except Exception:
-                pass
-
-            return JSONResponse({"result": summary})
-
+        if pdf_file and pdf_file.filename != '':
+            logger.info(f"Received file upload: {pdf_file.filename}")
+            file_content = await pdf_file.read()
+            pdf_text = extract_text_from_pdf(file_content)
+            file_source = f"uploaded file: {pdf_file.filename}"
+        elif pdf_url:
+            logger.info(f"Received PDF URL: {pdf_url}")
+            pdf_content_bytes = download_pdf_content(pdf_url)
+            pdf_text = extract_text_from_pdf(pdf_content_bytes)
+            file_source = f"URL: {pdf_url}"
         else:
-            return JSONResponse({"error": f"Unknown method '{method}'"}, status_code=404)
+            raise HTTPException(status_code=400, detail="No PDF file or URL provided.")
 
+        if not pdf_text.strip():
+            raise HTTPException(status_code=400, detail="Could not extract any text from the PDF. It might be an image-only PDF or corrupted.")
+
+        logger.info(f"Extracted text successfully from {file_source}. Length: {len(pdf_text)} characters.")
+
+        # Call the summarizer logic
+        summary = get_summary(pdf_text)
+
+        logger.info(f"Summary generated successfully for {file_source}.")
+        return {"summary": summary}
+
+    except HTTPException as e:
+        logger.error(f"HTTPException: {e.detail}", exc_info=True)
+        raise e
     except Exception as e:
-        return JSONResponse({"error": str(e)}, status_code=500)
+        logger.error(f"An unexpected error occurred during summarization: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"An error occurred during summarization: {e}")
 
-# Mount the router at the end
-app.include_router(router)

@@ -1,31 +1,75 @@
-
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>MCP Paper Summarizer</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paper Summarizer MCP</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <!-- Link to your custom style.css -->
     <link rel="stylesheet" href="/static/style.css">
 </head>
-<body>
-<div class="container">
-    <h1>MCP Paper Summarizer</h1>
-    <form method="POST" action="/summarize" enctype="multipart/form-data">
-        <label>Upload PDF:</label>
-        <input type="file" name="pdf">
+<body class="bg-gray-100 flex items-center justify-center min-h-screen font-inter p-4">
+    <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">Paper Summarizer</h1>
+        <p class="text-center text-gray-600 mb-8">Upload a PDF or provide a URL to get a concise summary using AI.</p>
 
-        <p style="text-align:center;">or</p>
+        <div class="space-y-6">
+            <!-- PDF File Upload Section -->
+            <div>
+                <label for="pdf_file" class="block text-sm font-medium text-gray-700 mb-2">Upload PDF File:</label>
+                <input type="file" id="pdf_file" name="pdf_file" accept=".pdf" class="block w-full text-sm text-gray-500
+                    file:mr-4 file:py-2 file:px-4
+                    file:rounded-full file:border-0
+                    file:text-sm file:font-semibold
+                    file:bg-indigo-50 file:text-indigo-700
+                    hover:file:bg-indigo-100 cursor-pointer rounded-lg border border-gray-300 p-2">
+            </div>
 
-        <label>Enter PDF URL:</label>
-        <input type="text" name="url" placeholder="https://example.com/paper.pdf">
+            <div class="flex items-center justify-center space-x-2">
+                <hr class="flex-grow border-gray-300">
+                <span class="text-gray-500 text-sm">OR</span>
+                <hr class="flex-grow border-gray-300">
+            </div>
 
-        <button type="submit">Summarize</button>
-    </form>
+            <!-- PDF URL Input Section -->
+            <div>
+                <label for="pdf_url" class="block text-sm font-medium text-gray-700 mb-2">Enter PDF URL:</label>
+                <input type="url" id="pdf_url" name="pdf_url" placeholder="e.g., https://arxiv.org/pdf/2505.21590"
+                       class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm
+                              focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            </div>
 
-    {% if summary %}
-    <div class="summary-box">
-        <h2>Summary:</h2>
-        <p>{{ summary }}</p>
+            <!-- Summarize Button -->
+            <button id="summarize_button"
+                    class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700
+                           focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500
+                           transition ease-in-out duration-150 font-semibold text-lg flex items-center justify-center">
+                <span id="button_text">Summarize Paper</span>
+                <svg id="loading_spinner" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Summary Display Area -->
+        <div id="summary_output" class="mt-8 p-6 bg-gray-50 rounded-lg border border-gray-200 hidden">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Summary:</h2>
+            <div id="summary_text" class="text-gray-700 leading-relaxed whitespace-pre-wrap"></div>
+            <button id="copy_button" class="mt-4 px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 text-sm">Copy Summary</button>
+            <div id="copy_message" class="text-green-600 text-sm mt-2 hidden">Copied to clipboard!</div>
+        </div>
+
+        <!-- Error Message Area -->
+        <div id="error_message" class="mt-8 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg hidden" role="alert">
+            <p class="font-bold">Error:</p>
+            <p id="error_text"></p>
+        </div>
     </div>
-    {% endif %}
-</div>
+
+    <!-- Link to your custom script.js -->
+    <script src="/static/script.js"></script>
 </body>
 </html>
