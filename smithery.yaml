@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Deployment
 metadata:
-  name: my-mcp-server  # Change this to your server name
+  name: multi-tool-mcp-server
 spec:
   type: container
   container:
@@ -9,12 +9,18 @@ spec:
       build: .
     command: ["python3", "-u", "mcp_server.py"]
     
-    # Optional: Add configuration for API keys
     configSchema:
       type: object
       properties:
-        API_KEY:
+        GEMINI_API_KEY:
           type: string
-          title: "API Key"
-          description: "Your API key"
-        # Add more config options as needed
+          title: "Gemini API Key"
+          description: "Your Google Gemini API Key for AI features"
+        OPENAI_API_KEY:
+          type: string
+          title: "OpenAI API Key"
+          description: "Your OpenAI API Key for ChatGPT features"
+        WEATHER_API_KEY:
+          type: string
+          title: "Weather API Key"
+          description: "Your OpenWeatherMap API Key for weather data"
