@@ -7,13 +7,11 @@ spec:
   container:
     image:
       build: .
-    command: ["python", "mcp_server.py"]
-    
+    command: ["python3", "-u", "mcp_server.py"]
     configSchema:
       type: object
-      required: ["GEMINI_API_KEY"]
       properties:
-        GEMINI_API_KEY:
+        TEST_VAR:
           type: string
-          title: "Gemini API Key"
-          description: "Your Google Gemini API Key for PDF summarization"
+          title: "Test Variable"
+          description: "Just a test"
