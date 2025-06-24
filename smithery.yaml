@@ -1,17 +1,20 @@
 apiVersion: v1
 kind: Deployment
 metadata:
-  name: hello-mcp-server
+  name: my-mcp-server  # Change this to your server name
 spec:
   type: container
   container:
     image:
       build: .
     command: ["python3", "-u", "mcp_server.py"]
+    
+    # Optional: Add configuration for API keys
     configSchema:
       type: object
       properties:
-        TEST_VAR:
+        API_KEY:
           type: string
-          title: "Test Variable"
-          description: "Just a test"
+          title: "API Key"
+          description: "Your API key"
+        # Add more config options as needed
