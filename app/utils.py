@@ -1,3 +1,4 @@
+
 import requests
 import uuid
 import os
@@ -13,8 +14,7 @@ def download_pdf_from_url(url: str) -> str:
             with open(filename, "wb") as f:
                 f.write(response.content)
             return filename
-        else:
-            return None
+        return None
     except Exception as e:
         print(f"Error downloading PDF: {e}")
         return None
