@@ -1,119 +1,43 @@
-# Paper Summarizer (MCP)
+# MCP Summarization Server
 
-This project is a web application built with FastAPI (Python) and a simple HTML/CSS/JavaScript frontend. It allows users to upload a PDF file or provide a PDF link to get a concise summary of the academic paper, powered by Google's Gemini large language model.
+A deployable MCP server for Smithery that summarizes research papers using the Gemini API. Users can upload a PDF or provide a URL to a paper, and receive a summary.
 
-The application is designed for deployment on Smithery.ai as a Micro-service Compatible Platform (MCP) server.
+## Features
+- Upload PDF or enter URL of a research paper
+- Summarizes using Google Gemini API
+- Deployable to [smithery.ai](https://smithery.ai)
 
-## 📁 Project Structure
-
+## Project Structure
 ```
-mcp-paper-summarizer/
-├── app/
-│   ├── main.py             # FastAPI server exposing API endpoints and serving UI
-│   ├── summarizer.py       # LLM logic for summarizing PDFs using Gemini API
-│   └── utils.py            # PDF downloading, text extraction utilities
-├── static/
-│   └── style.css           # Custom CSS styling for the UI
-│   └── script.js           # Frontend logic for interactive elements
-├── templates/
-│   └── index.html          # Frontend UI for PDF upload/URL input
-├── requirements.txt        # Python dependencies for the backend
-├── Dockerfile              # Docker configuration for containerization
-├── smithery.yaml           # Smithery.ai specific deployment configuration
-└── README.md               # Project documentation
+backend/   # FastAPI MCP server
+frontend/  # React UI (Vite)
+smithery.yaml
 ```
 
-## ✨ Features
+## Local Development
 
-- **PDF Upload**: Summarize papers by uploading a PDF file directly from your computer.
-- **PDF URL Input**: Summarize papers by providing a direct link to a PDF file (e.g., from arXiv).
-- **AI-Powered Summarization**: Uses Google's powerful Gemini 2.0 Flash API to generate concise and relevant summaries.
-- **User-Friendly Interface**: A clean, responsive, and easy-to-use web interface built with HTML, modern CSS (Tailwind CSS), and JavaScript (script.js) for dynamic interactions.
-
-## 🛠 Setup and Local Development
-
-### 1. Clone the Repository
-
+### Backend
 ```bash
-git clone https://github.com/Meet261/hello-mcp-server.git
-cd hello-mcp-server
-```
-
-### 2. Create a Python Virtual Environment
-
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
-
-### 3. Install Python Dependencies
-
-```bash
+cd backend
 pip install -r requirements.txt
+uvicorn main:app --reload --port 8080
 ```
 
-### 4. Get Your Google Gemini API Key
-
-- Visit [Google AI Studio](https://makersuite.google.com/)
-- Log in with your Google account.
-- Click “Create API key in new project” and copy the key.
-
-### 5. Configure Your API Key Locally
-
-Create a `.env` file in your root project directory:
-
-```
-GEMINI_API_KEY=YOUR_GEMINI_API_KEY_HERE
-```
-
-Also add `.env` to `.gitignore` to keep your key secret:
-
-```
-.env
-```
-
-### 6. Run the Application
-
+### Frontend
 ```bash
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+cd frontend
+npm install
+npm run dev
 ```
 
-Access in your browser:
+## Deployment to Smithery
+1. Push your code (including `smithery.yaml` and Dockerfiles) to GitHub.
+2. Connect your GitHub to Smithery.
+3. Deploy via the Smithery dashboard.
 
-```
-http://127.0.0.1:8000/
-```
+## Configuration
+- Requires a Gemini API key (see [Google Gemini](https://ai.google.com/gemini)).
+- Smithery will pass this as a config parameter.
 
-## 🚀 Deployment to Smithery.ai
-
-### 1. Push Your Code to GitHub
-
-```bash
-git add .
-git commit -m "Initial commit of paper summarizer MCP"
-git push origin main
-```
-
-### 2. Log in to Smithery.ai
-
-- Go to [smithery.ai](https://smithery.ai)
-- Create a new project and connect your GitHub repository.
-
-### 3. Configure Environment Variables
-
-In your project settings:
-
-- **Key**: `GEMINI_API_KEY`
-- **Value**: Paste your Gemini API key (no quotes)
-
-### 4. Initiate Deployment
-
-Smithery uses your `Dockerfile` and `smithery.yaml` to build the image.
-
-### 5. Access Your Live App
-
-After a successful deployment, Smithery provides a public URL — use it to access your deployed summarizer!
-
----
-
-Enjoy your AI-powered research assistant! 🧠📄
+## License
+MIT 

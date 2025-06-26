@@ -1,26 +1,15 @@
-apiVersion: v1
-kind: Deployment
-metadata:
-  name: multi-tool-mcp-server
-spec:
-  type: container
-  container:
-    image:
-      build: .
-    command: ["python3", "-u", "mcp_server.py"]
-    
-    configSchema:
-      type: object
-      properties:
-        GEMINI_API_KEY:
-          type: string
-          title: "Gemini API Key"
-          description: "Your Google Gemini API Key for AI features"
-        OPENAI_API_KEY:
-          type: string
-          title: "OpenAI API Key"
-          description: "Your OpenAI API Key for ChatGPT features"
-        WEATHER_API_KEY:
-          type: string
-          title: "Weather API Key"
-          description: "Your OpenWeatherMap API Key for weather data"
+runtime: "container"
+build:
+  dockerfile: "backend/Dockerfile"
+  dockerBuildPath: "."
+startCommand:
+  type: "http"
+  configSchema:
+    type: "object"
+    properties:
+      geminiApiKey:
+        type: "string"
+        description: "Your Gemini API key"
+    required: ["geminiApiKey"]
+  exampleConfig:
+    geminiApiKey: "sk-your-gemini-key" 
