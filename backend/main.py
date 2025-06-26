@@ -1,4 +1,5 @@
 import os
+import logging
 from fastapi import FastAPI, File, UploadFile, Form, Request
 from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -7,6 +8,10 @@ import requests
 import tempfile
 import fitz  # PyMuPDF
 import google.generativeai as genai
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
@@ -49,13 +54,21 @@ def summarize_with_gemini(text, api_key):
     response = model.generate_content(f"Summarize this research paper:\n{text}")
     return response.text
 
+@app.get("/")
+async def root():
+    logger.info("Health check: / endpoint called.")
+    return {"status": "ok"}
+
 @app.get("/mcp")
 async def mcp_get():
+    logger.info("GET /mcp called for tool discovery.")
     return {"message": "MCP Summarization Server is running."}
 
 @app.post("/mcp")
 async def mcp_post(request: Request, file: UploadFile = File(None), url: str = Form(None), geminiApiKey: str = Form(None)):
+    logger.info("POST /mcp called.")
     if not geminiApiKey:
+        logger.error("Missing Gemini API key.")
         return JSONResponse(status_code=400, content={"error": "Missing Gemini API key."})
     try:
         if file:
@@ -66,16 +79,21 @@ async def mcp_post(request: Request, file: UploadFile = File(None), url: str = F
         elif url:
             text = extract_text_from_url(url)
         else:
+            logger.error("No file or URL provided.")
             return JSONResponse(status_code=400, content={"error": "No file or URL provided."})
         if not text.strip():
+            logger.error("No text extracted from input.")
             return JSONResponse(status_code=400, content={"error": "No text extracted from input."})
         summary = summarize_with_gemini(text, geminiApiKey)
+        logger.info("Summarization successful.")
         return {"summary": summary}
     except Exception as e:
+        logger.error(f"Error in POST /mcp: {e}")
         return JSONResponse(status_code=500, content={"error": str(e)})
 
 @app.delete("/mcp")
 async def mcp_delete():
+    logger.info("DELETE /mcp called.")
     return {"message": "DELETE not implemented, but endpoint is required by Smithery."}
 
 if __name__ == "__main__":
