@@ -62,7 +62,15 @@ async def root():
 @app.get("/mcp")
 async def mcp_get():
     logger.info("GET /mcp called for tool discovery.")
-    return {"message": "MCP Summarization Server is running."}
+    return {
+        "message": "MCP Summarization Server is running.",
+        "tools": [
+            {
+                "name": "summarize",
+                "description": "Summarize a research paper from PDF or URL using Gemini."
+            }
+        ]
+    }
 
 @app.post("/mcp")
 async def mcp_post(request: Request, file: UploadFile = File(None), url: str = Form(None), geminiApiKey: str = Form(None)):
@@ -96,7 +104,39 @@ async def mcp_delete():
     logger.info("DELETE /mcp called.")
     return {"message": "DELETE not implemented, but endpoint is required by Smithery."}
 
+# MCP server URL (replace with your actual deployment URL)
+MCP_SERVER_URL = "https://server.smithery.ai/@smithery-ai/github/mcp"
+
+# If authentication is required, add headers or params as needed
+HEADERS = {
+    "Authorization": "Bearer YOUR_SMITHERY_API_KEY",  # If required
+    "Content-Type": "application/json"
+}
+
+def list_tools():
+    # Smithery expects a GET to /mcp for tool discovery
+    response = requests.get(MCP_SERVER_URL, headers=HEADERS, timeout=10)
+    response.raise_for_status()
+    print("Available tools:", response.json())
+
+def call_tool(tool_name, params):
+    # For custom MCPs, you usually POST to /mcp with tool name and params
+    payload = {
+        "tool": tool_name,
+        "params": params
+    }
+    response = requests.post(MCP_SERVER_URL, json=payload, headers=HEADERS, timeout=30)
+    response.raise_for_status()
+    return response.json()
+
 if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8080))
-    uvicorn.run(app, host="0.0.0.0", port=port) 
+    uvicorn.run(app, host="0.0.0.0", port=port)
+
+    # List available tools
+    list_tools()
+
+    # Example: call a tool (replace with your actual tool and params)
+    # result = call_tool("summarize", {"text": "Your research paper text here"})
+    # print("Tool result:", result) 
